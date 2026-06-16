@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circlo v3</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+body{
+  background:#f4f6fb;
+}
+
+/* NAV */
+nav{
+  position:sticky;
+  top:0;
+  background:white;
+  padding:12px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.logo{
+  font-weight:bold;
+  font-size:18px;
+}
+
+button{
+  cursor:pointer;
+}
+
+/* AUTH */
+#auth{
+  position:fixed;
+  inset:0;
+  background:#f4f6fb;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+.authBox{
+  background:white;
+  padding:22px;
+  width:320px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.authBox input{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+.authBox button{
+  width:100%;
+  padding:10px;
+  border:none;
+  background:#111;
+  color:white;
+  border-radius:8px;
+}
+
+/* MAIN */
+.container{
+  max-width:650px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+/* POST BOX */
+.postBox{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+}
+
+textarea{
+  width:100%;
+  padding:10px;
+  border:none;
+  resize:none;
+  outline:none;
+}
+
+.actions{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+}
+
+.actions label{
+  cursor:pointer;
+}
+
+/* POST */
+.post{
+  background:white;
+  margin-top:15px;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  overflow:hidden;
+}
+
+.postHeader{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+}
+
+.postHeader img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+
+.postImg{
+  width:100%;
+}
+
+.postBody{
+  padding:12px;
+}
+
+.postActions{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-top:1px solid #eee;
+}
+
+.postActions button{
+  background:none;
+  border:none;
+  cursor:pointer;
+}
+
+/* COMMENTS */
+.commentBox{
+  padding:10px;
+  border-top:1px solid #eee;
+}
+
+.commentBox input{
+  width:70%;
+  padding:8px;
+}
+
+.commentBox button{
+  padding:8px 10px;
+  border:none;
+  background:#111;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+  <div class="authBox">
+    <h3 id="title">Login</h3>
+
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="authAction()">Continue</button>
+
+    <p style="text-align:center;cursor:pointer" onclick="toggleMode()">
+      Switch
+    </p>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">CIRCLO</div>
+  <button onclick="logout()">Logout</button>
+</nav>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- CREATE POST -->
+  <div class="postBox">
+    <textarea id="postText" placeholder="What's on your mind?"></textarea>
+
+    <div class="actions">
+      <input type="file" id="image" hidden>
+      <label for="image">📷</label>
+
+      <button onclick="createPost()">Post</button>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div id="feed"></div>
+
+</div>
+
+<script type="module">
+
+/* ================= FIREBASE ================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  increment,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBmomWt8PoL7rQz52N4x3y7zbEYzjxneYU",
+  authDomain: "circlo-bea39.firebaseapp.com",
+  projectId: "circlo-bea39",
+  storageBucket: "circlo-bea39.appspot.com",
+  messagingSenderId: "287380738037",
+  appId: "1:287380738037:web:3b132d5e0c9fa20937dabc",
+  measurementId: "G-F2HZJW3GJ3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+/* ================= AUTH ================= */
+
+let loginMode = true;
+
+window.toggleMode = () => {
+  loginMode = !loginMode;
+  document.getElementById("title").innerText =
+    loginMode ? "Login" : "Register";
+};
+
+window.authAction = async () => {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try{
+    if(loginMode){
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+  } catch(e){
+    alert(e.message);
+  }
+};
+
+onAuthStateChanged(auth,(user)=>{
+  if(user){
+    document.getElementById("auth").style.display="none";
+    loadPosts();
+  } else {
+    document.getElementById("auth").style.display="flex";
+  }
+});
+
+/* LOGOUT */
+window.logout = ()=>signOut(auth);
+
+/* ================= POST ================= */
+
+window.createPost = async () => {
+
+  const text = document.getElementById("postText").value;
+  const file = document.getElementById("image").files[0];
+
+  let imageURL = "";
+
+  if(file){
+    const r = ref(storage,"posts/"+Date.now());
+    await uploadBytes(r,file);
+    imageURL = await getDownloadURL(r);
+  }
+
+  await addDoc(collection(db,"posts"),{
+    text,
+    imageURL,
+    likes:0,
+    createdAt:serverTimestamp()
+  });
+
+  document.getElementById("postText").value="";
+  document.getElementById("image").value="";
+};
+
+/* ================= FEED ================= */
+
+const feed = document.getElementById("feed");
+
+function loadPosts(){
+
+  const q = query(collection(db,"posts"),orderBy("createdAt","desc"));
+
+  onSnapshot(q,(snap)=>{
+
+    feed.innerHTML="";
+
+    snap.forEach((d)=>{
+
+      const p = d.data();
+
+      const div = document.createElement("div");
+      div.className="post";
+
+      div.innerHTML=`
+        <div class="postHeader">
+          <img src="https://i.pravatar.cc/100">
+          <b>Circlo User</b>
+        </div>
+
+        ${p.imageURL ? `<img class="postImg" src="${p.imageURL}">` : ""}
+
+        <div class="postBody">${p.text}</div>
+
+        <div class="postActions">
+          <button onclick="like('${d.id}',${p.likes})">
+            ❤️ ${p.likes}
+          </button>
+
+          <button onclick="toggle(this)">💬</button>
+        </div>
+
+        <div class="commentBox">
+          <input id="c-${d.id}" placeholder="comment">
+          <button onclick="comment('${d.id}')">Send</button>
+        </div>
+      `;
+
+      feed.appendChild(div);
+    });
+
+  });
+}
+
+/* LIKE */
+window.like = async (id,likes)=>{
+  await updateDoc(doc(db,"posts",id),{
+    likes:likes+1
+  });
+};
+
+/* COMMENT */
+window.comment = async (id)=>{
+  const input=document.getElementById("c-"+id);
+  if(!input.value.trim())return;
+  input.value="";
+};
+
+</script>
+
+</body>
+</html>
