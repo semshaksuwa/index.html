@@ -4,48 +4,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Circlo v3</title>
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
+  :root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --primary:#028bca;
+  --primary-dark:#016a9c;
+  --text:#1e1e1e;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow:0 10px 30px rgba(0,0,0,0.08);
+  --radius:14px;
+  --transition:0.25s ease;
+}
+
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Arial;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
 body{
-  background:#f4f6fb;
+  background:var(--bg);
+  color:var(--text);
 }
 
 /* NAV */
 nav{
   position:sticky;
   top:0;
-  background:white;
-  padding:12px 18px;
+  z-index:1000;
+  height:70px;
+  padding:0 20px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color:white;
+  box-shadow:0 8px 20px rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
+}
+
+.navRight{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.profileMini{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.profileMini img{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid white;
+}
+
+.profileMini span{
+  font-size:14px;
+  font-weight:600;
 }
 
 .logo{
-  font-weight:bold;
-  font-size:18px;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:1px;
 }
 
 button{
+  border:none;
+  border-radius:10px;
+  padding:8px 14px;
   cursor:pointer;
+  transition:var(--transition);
+  font-weight:500;
+}
+
+/* GLOBAL BUTTON STYLE */
+button:hover{
+  transform:translateY(-1px);
 }
 
 /* AUTH */
 #auth{
   position:fixed;
   inset:0;
-  background:#f4f6fb;
+  background:rgba(245,247,251,0.9);
+  backdrop-filter: blur(8px);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -53,123 +106,328 @@ button{
 }
 
 .authBox{
-  background:white;
-  padding:22px;
-  width:320px;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+  width:340px;
+  background:var(--card);
+  padding:25px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  text-align:center;
 }
 
 .authBox input{
   width:100%;
-  padding:10px;
-  margin:6px 0;
-  border:1px solid #ddd;
-  border-radius:8px;
+  padding:12px;
+  margin:8px 0;
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+  transition:var(--transition);
+}
+
+.authBox input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(2,139,202,0.15);
 }
 
 .authBox button{
   width:100%;
-  padding:10px;
-  border:none;
-  background:#111;
+  padding:12px;
+  background:var(--primary);
   color:white;
-  border-radius:8px;
+  border-radius:10px;
+}
+
+.authBox button:hover{
+  background:var(--primary-dark);
 }
 
 /* MAIN */
 .container{
-  max-width:650px;
-  margin:20px auto;
+  max-width:700px;
+  margin:30px auto;
   padding:0 15px;
 }
 
 /* POST BOX */
 .postBox{
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  background:var(--card);
+  margin:20px 0;
+  padding:18px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
 }
 
-textarea{
-  width:100%;
-  padding:10px;
-  border:none;
-  resize:none;
-  outline:none;
-}
 
 .actions{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   margin-top:10px;
 }
 
 .actions label{
   cursor:pointer;
+  color:var(--muted);
+  font-size:14px;
 }
 
-/* POST */
+/* POSTS */
 .post{
-  background:white;
+  background:var(--card);
   margin-top:15px;
-  border-radius:12px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
   overflow:hidden;
+  border:1px solid var(--border);
+  transition:var(--transition);
+}
+
+.post:hover{
+  transform:translateY(-2px);
 }
 
 .postHeader{
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:10px;
   padding:12px;
 }
 
 .postHeader img{
-  width:40px;
-  height:40px;
+  width:42px;
+  height:42px;
   border-radius:50%;
-}
-
-.postImg{
-  width:100%;
+  object-fit:cover;
 }
 
 .postBody{
   padding:12px;
+  font-size:15px;
+  color:var(--text);
 }
 
+.postImg{
+  width:100%;
+  display:block;
+}
+
+/* ACTIONS */
 .postActions{
   display:flex;
   justify-content:space-between;
   padding:10px 12px;
-  border-top:1px solid #eee;
+  border-top:1px solid var(--border);
 }
 
 .postActions button{
-  background:none;
-  border:none;
-  cursor:pointer;
+  background:transparent;
+  color:var(--muted);
+  font-size:14px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  transition:var(--transition);
+}
+
+.postActions button:hover{
+  color:var(--primary);
 }
 
 /* COMMENTS */
 .commentBox{
   padding:10px;
-  border-top:1px solid #eee;
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:8px;
 }
 
 .commentBox input{
-  width:70%;
-  padding:8px;
+  flex:1;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+}
+
+.commentBox input:focus{
+  border-color:var(--primary);
 }
 
 .commentBox button{
-  padding:8px 10px;
-  border:none;
-  background:#111;
+  background:var(--primary);
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
+}
+
+.commentBox button:hover{
+  background:var(--primary-dark);
+}
+
+/* PRIMARY BUTTON */
+.btn{
+  background:var(--primary);
   color:white;
 }
+
+.btn:hover{
+  background:var(--primary-dark);
+}
+
+label{
+  margin-right:70%;
+  font-size: small;
+  padding: 5px;
+}
+#postText{
+  width:100%;
+  min-height:110px;
+  padding:14px 14px;
+  border:2px solid var(--border);
+  border-radius:12px;
+  outline:none;
+  font-size:15px;
+  background:#fff;
+  transition:0.25s ease;
+  resize:none;
+}
+
+/* Placeholder styling */
+#postText::placeholder{
+  color:#9aa3af;
+  font-size:14px;
+}
+
+/* Focus effect (modern glow border) */
+#postText:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(2,139,202,0.15);
+}
+
+.comments{
+  background:#fff;
+}
+
+/* STORY BAR CONTAINER */
+.storyBar{
+  display:flex;
+  gap:14px;
+  padding:12px;
+  overflow-x:auto;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+
+.storyBar::-webkit-scrollbar{
+  display:none;
+}
+
+/* STORY ITEM */
+.story{
+  min-width:72px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* RING */
+.storyRing{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  padding:3px;
+  background:linear-gradient(45deg,#ff2d55,#ff9500,#ff2d55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.storyRing img{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid white;
+}
+
+/* username */
+.story span{
+  font-size:11px;
+  margin-top:6px;
+  color:var(--muted);
+  max-width:70px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* ADD STORY */
+.addStory .storyRing{
+  background:linear-gradient(135deg,#028bca,#00c6ff);
+}
+
+.addStory .storyRing::after{
+  content:"+";
+  position:absolute;
+  color:white;
+  font-size:26px;
+  font-weight:bold;
+}
+.story-bubble {
+  width: 70px;
+  text-align: center;
+  margin: 6px;
+  position: relative;
+}
+
+.story-bubble img {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  padding: 3px;
+  object-fit: cover;
+}
+
+.story-bubble.unseen img {
+  border: 3px solid #ff2d55;
+}
+
+.story-bubble.seen img {
+  border: 3px solid #aaa;
+  opacity: 0.7;
+}
+.story-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.story-viewer img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.hidden {
+  display: none;
+}
+
+.progress {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  background: rgba(255,255,255,0.3);
+}
+
 </style>
 </head>
 
@@ -178,39 +436,111 @@ textarea{
 <!-- AUTH -->
 <div id="auth">
   <div class="authBox">
-    <h3 id="title">Login</h3>
-
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
+    <h3 id="title"><i class="fa-solid fa-circle-user"></i></h3> <br>
+    <label for="Email">Email:</label> 
+    <input id="email" placeholder="Email" required> <br>
+    <label for="password">Password:</label> 
+    <input id="password" type="password" placeholder="Password" required>
 
     <button onclick="authAction()">Continue</button>
 
     <p style="text-align:center;cursor:pointer" onclick="toggleMode()">
-      Switch
+      Register
     </p>
   </div>
 </div>
 
 <!-- NAV -->
 <nav>
+
   <div class="logo">CIRCLO</div>
-  <button onclick="logout()">Logout</button>
+
+  <div class="navRight">
+
+    <div class="profileMini">
+      <img id="navAvatar"
+        src="https://i.pravatar.cc/100"> <br>
+        <button class="btn" onclick="toggleFollow()" id="followBtn">
+  Follow
+</button>
+      <button onclick="openProfile()">Profile</button>
+      <span id="navUsername">
+        @user
+      </span>
+    </div>
+
+    <button onclick="logout()">Logout</button>
+
+  </div>
+
 </nav>
+
+<!-- PROFILE PAGE -->
+<div id="profilePage" style="display:none;" class="container">
+
+  <div class="postBox" style="text-align:center;">
+
+    <img id="profileAvatar"
+      src="https://i.pravatar.cc/150"
+      style="width:120px;height:120px;border-radius:50%;object-fit:cover;">
+
+    <h2 id="profileUsername">@user</h2>
+
+    <p id="profileBio">No bio yet</p>
+
+    <br>
+
+    <!-- upload image -->
+    <input type="file" id="avatarInput" accept="image/*">
+
+    <br><br>
+
+    <!-- edit bio -->
+    <textarea id="bioInput" placeholder="Write your bio..."></textarea>
+
+    <br><br>
+
+    <button class="btn" onclick="updateProfile()">
+      Save Changes
+    </button>
+
+  </div>
+
+</div>
+
+<div class="storyBar" id="storyBar">
+  <div class="story addStory" onclick="triggerStoryInput()">
+    <div class="storyRing">
+      <img src="https://i.pravatar.cc/100">
+    </div>
+    <span>Your story</span>
+  </div>
+
+  <input type="file" id="storyInput" hidden>
+</div>
+
+<div id="storyViewer" class="story-viewer hidden">
+  <div class="progress"></div>
+  <img id="storyMedia" />
+</div>
 
 <!-- MAIN -->
 <div class="container">
 
-  <!-- CREATE POST -->
-  <div class="postBox">
-    <textarea id="postText" placeholder="What's on your mind?"></textarea>
 
-    <div class="actions">
-      <input type="file" id="image" hidden>
-      <label for="image">📷</label>
 
-      <button onclick="createPost()">Post</button>
-    </div>
+    <!-- CREATE POST -->
+<div class="postBox">
+  <textarea id="postText" placeholder="What's on your mind?"></textarea>
+
+  <div class="actions">
+    <button class="btn" onclick="createPost()">
+      Post
+    </button>
   </div>
+
+  </div>
+
 
   <!-- FEED -->
   <div id="feed"></div>
@@ -219,9 +549,10 @@ textarea{
 
 <script type="module">
 
-/* ================= FIREBASE ================= */
+/* ================= IMPORTS ================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -231,24 +562,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  doc,
-  updateDoc,
-  increment,
-  query,
-  orderBy,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
-import {
   getStorage,
   ref,
   uploadBytes,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+import * as firestore from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+/* ================= FIREBASE ================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyBmomWt8PoL7rQz52N4x3y7zbEYzjxneYU",
@@ -256,143 +578,838 @@ const firebaseConfig = {
   projectId: "circlo-bea39",
   storageBucket: "circlo-bea39.appspot.com",
   messagingSenderId: "287380738037",
-  appId: "1:287380738037:web:3b132d5e0c9fa20937dabc",
-  measurementId: "G-F2HZJW3GJ3"
+  appId: "1:287380738037:web:3b132d5e0c9fa20937dabc"
 };
 
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+const db = firestore.getFirestore(app);
+
 const storage = getStorage(app);
 
-/* ================= AUTH ================= */
+const feed = document.getElementById("feed");
+
+/* ================= GLOBALS ================= */
 
 let loginMode = true;
 
+let currentProfileUserId = null;
+
+let currentStoryIndex = 0;
+
+let storiesList = [];
+
+let storyTimer = null;
+
+/* ================= PROFILE ================= */
+
+window.openProfile = async (uid = null) => {
+
+  const user = auth.currentUser;
+
+  if (!user) return;
+
+  const profileId = uid || user.uid;
+
+  currentProfileUserId = profileId;
+
+  document.querySelector(".container").style.display = "none";
+
+  document.getElementById("profilePage").style.display = "block";
+
+  const userRef =
+    firestore.doc(db, "users", profileId);
+
+  const userSnap =
+    await firestore.getDoc(userRef);
+
+  if (!userSnap.exists()) return;
+
+  const data = userSnap.data();
+
+  document.getElementById("profileAvatar").src =
+    data.avatar;
+
+  document.getElementById("profileUsername").innerText =
+    "@" + data.username;
+
+  document.getElementById("profileBio").innerText =
+    data.bio || "";
+
+  document.getElementById("bioInput").value =
+    data.bio || "";
+
+  const mySnap =
+    await firestore.getDoc(
+      firestore.doc(db, "users", user.uid)
+    );
+
+  const myData = mySnap.data();
+
+  const isFollowing =
+    myData.following?.includes(profileId);
+
+  document.getElementById("followBtn").innerText =
+    profileId === user.uid
+      ? "You"
+      : isFollowing
+      ? "Unfollow"
+      : "Follow";
+
+  loadUserPosts(profileId);
+};
+
+/* ================= FOLLOW ================= */
+
+window.toggleFollow = async () => {
+
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) return;
+
+  const profileUserId = currentProfileUserId;
+
+  if (!profileUserId) return;
+
+  if (currentUser.uid === profileUserId) return;
+
+  const myRef =
+    firestore.doc(db, "users", currentUser.uid);
+
+  const otherRef =
+    firestore.doc(db, "users", profileUserId);
+
+  const mySnap =
+    await firestore.getDoc(myRef);
+
+  const myData =
+    mySnap.data();
+
+  const isFollowing =
+    myData.following?.includes(profileUserId);
+
+  if (isFollowing) {
+
+    await firestore.updateDoc(myRef, {
+      following:
+        firestore.arrayRemove(profileUserId)
+    });
+
+    await firestore.updateDoc(otherRef, {
+      followers:
+        firestore.arrayRemove(currentUser.uid)
+    });
+
+  } else {
+
+    await firestore.updateDoc(myRef, {
+      following:
+        firestore.arrayUnion(profileUserId)
+    });
+
+    await firestore.updateDoc(otherRef, {
+      followers:
+        firestore.arrayUnion(currentUser.uid)
+    });
+  }
+
+  openProfile(profileUserId);
+};
+
+/* ================= LOAD USER POSTS ================= */
+
+function loadUserPosts(uid) {
+
+  let profileFeed =
+    document.getElementById("profileFeed");
+
+  if (!profileFeed) {
+
+    profileFeed =
+      document.createElement("div");
+
+    profileFeed.id = "profileFeed";
+
+    document
+      .getElementById("profilePage")
+      .appendChild(profileFeed);
+  }
+
+  const q = firestore.query(
+    firestore.collection(db, "posts"),
+    firestore.where("uid", "==", uid),
+    firestore.orderBy("createdAt", "desc")
+  );
+
+  firestore.onSnapshot(q, (snap) => {
+
+    profileFeed.innerHTML = "";
+
+    snap.forEach((d) => {
+
+      const p = d.data();
+
+      profileFeed.innerHTML += `
+        <div class="post">
+
+          <div class="postHeader">
+            <img src="${p.avatar}">
+            <b>@${p.username}</b>
+          </div>
+
+          <div class="postBody">
+            ${p.text}
+          </div>
+
+        </div>
+      `;
+    });
+  });
+}
+
+/* ================= UPDATE PROFILE ================= */
+
+window.updateProfile = async () => {
+
+  try {
+
+    const user = auth.currentUser;
+
+    if (!user) return;
+
+    const userRef =
+      firestore.doc(db, "users", user.uid);
+
+    let avatarURL = null;
+
+    const file =
+      document.getElementById("avatarInput").files[0];
+
+    if (file) {
+
+      const storageRef =
+        ref(storage, "avatars/" + user.uid);
+
+      await uploadBytes(storageRef, file);
+
+      avatarURL =
+        await getDownloadURL(storageRef);
+    }
+
+    const bio =
+      document.getElementById("bioInput").value;
+
+    const updateData = {
+      bio
+    };
+
+    if (avatarURL) {
+      updateData.avatar = avatarURL;
+    }
+
+    await firestore.updateDoc(userRef, updateData);
+
+    alert("Profile updated");
+
+    openProfile();
+
+  } catch(err) {
+
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+/* ================= STORY INPUT ================= */
+
+window.triggerStoryInput = () => {
+
+  document
+    .getElementById("storyInput")
+    .click();
+};
+
+/* ================= STORY UPLOAD ================= */
+
+window.uploadStory = async () => {
+
+  try {
+
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
+    const file =
+      document.getElementById("storyInput").files[0];
+
+    if (!file) return;
+
+    const userSnap =
+      await firestore.getDoc(
+        firestore.doc(db, "users", user.uid)
+      );
+
+    if (!userSnap.exists()) {
+      alert("User not found");
+      return;
+    }
+
+    const userData =
+      userSnap.data();
+
+    const storageRef =
+      ref(storage, "stories/" + Date.now());
+
+    await uploadBytes(storageRef, file);
+
+    const url =
+      await getDownloadURL(storageRef);
+
+    await firestore.addDoc(
+      firestore.collection(db, "stories"),
+      {
+        userId: user.uid,
+        username: userData.username,
+        profilePic: userData.avatar,
+        mediaUrl: url,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 86400000,
+        viewers: []
+      }
+    );
+
+    document.getElementById("storyInput").value = "";
+
+  } catch(err) {
+
+    console.error(err);
+
+    alert(err.message);
+  }
+};
+
+/* ================= AUTO STORY UPLOAD ================= */
+
+document
+.getElementById("storyInput")
+.addEventListener("change", async () => {
+
+  await uploadStory();
+});
+
+/* ================= LOAD STORIES ================= */
+
+function loadStoriesUI() {
+
+  const container =
+    document.getElementById("storyBar");
+
+  const q = firestore.query(
+    firestore.collection(db, "stories"),
+    firestore.orderBy("createdAt", "desc")
+  );
+
+  firestore.onSnapshot(q, async (snap) => {
+
+    container
+      .querySelectorAll(".story:not(.addStory)")
+      .forEach(el => el.remove());
+
+    storiesList = [];
+
+    const now = Date.now();
+
+    snap.forEach(async (docu) => {
+
+      const s = docu.data();
+
+      if (!s.expiresAt || s.expiresAt < now) {
+
+        try {
+
+          await firestore.deleteDoc(
+            firestore.doc(db, "stories", docu.id)
+          );
+
+        } catch(err) {
+          console.log(err);
+        }
+
+        return;
+      }
+
+      storiesList.push({
+        id: docu.id,
+        ...s
+      });
+
+      const seen =
+        s.viewers?.includes(auth.currentUser?.uid);
+
+      const div =
+        document.createElement("div");
+
+      div.className = "story";
+
+      div.innerHTML = `
+        <div class="storyRing"
+          style="
+            background:${
+              seen
+                ? '#999'
+                : 'linear-gradient(45deg,#ff2d55,#ff9500,#ff2d55)'
+            };
+          ">
+
+          <img src="${s.profilePic}">
+
+        </div>
+
+        <span>${s.username}</span>
+      `;
+
+      div.onclick = () => {
+        openStory(docu.id);
+      };
+
+      container.appendChild(div);
+    });
+  });
+}
+
+/* ================= STORY VIEWER ================= */
+
+window.openStory = async (storyId) => {
+
+  const story =
+    storiesList.find(s => s.id === storyId);
+
+  if (!story) return;
+
+  currentStoryIndex =
+    storiesList.indexOf(story);
+
+  document
+    .getElementById("storyViewer")
+    .classList.remove("hidden");
+
+  showStory(story);
+
+  markAsSeen(storyId);
+};
+
+function showStory(story) {
+
+  const media =
+    document.getElementById("storyMedia");
+
+  media.src = story.mediaUrl;
+
+  clearTimeout(storyTimer);
+
+  storyTimer = setTimeout(() => {
+
+    nextStory();
+
+  }, 5000);
+}
+
+function nextStory() {
+
+  currentStoryIndex++;
+
+  if (currentStoryIndex >= storiesList.length) {
+
+    closeStory();
+
+    return;
+  }
+
+  showStory(
+    storiesList[currentStoryIndex]
+  );
+}
+
+function closeStory() {
+
+  clearTimeout(storyTimer);
+
+  document
+    .getElementById("storyViewer")
+    .classList.add("hidden");
+}
+
+document
+.getElementById("storyViewer")
+.addEventListener("click", closeStory);
+
+/* ================= MARK STORY AS SEEN ================= */
+
+async function markAsSeen(storyId) {
+
+  try {
+
+    const user = auth.currentUser;
+
+    if (!user) return;
+
+    await firestore.updateDoc(
+      firestore.doc(db, "stories", storyId),
+      {
+        viewers:
+          firestore.arrayUnion(user.uid)
+      }
+    );
+
+  } catch(err) {
+
+    console.log(err);
+  }
+}
+
+/* ================= AUTH ================= */
+
 window.toggleMode = () => {
+
   loginMode = !loginMode;
+
   document.getElementById("title").innerText =
-    loginMode ? "Login" : "Register";
+    loginMode
+      ? "Login"
+      : "Register";
 };
 
 window.authAction = async () => {
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  try {
 
-  try{
-    if(loginMode){
-      await signInWithEmailAndPassword(auth, email, password);
-    } else {
-      await createUserWithEmailAndPassword(auth, email, password);
+    const email =
+      document.getElementById("email").value;
+
+    const password =
+      document.getElementById("password").value;
+
+    if (!email || !password) {
+      alert("Fill all fields");
+      return;
     }
-  } catch(e){
-    alert(e.message);
+
+    if (loginMode) {
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    } else {
+
+      const cred =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+      await firestore.setDoc(
+        firestore.doc(db, "users", cred.user.uid),
+        {
+          uid: cred.user.uid,
+          email,
+          username: email.split("@")[0],
+          avatar: "https://i.pravatar.cc/150",
+          bio: "Hey 👋 I'm new to Circlo",
+          followers: [],
+          following: []
+        }
+      );
+    }
+
+  } catch(err) {
+
+    console.error(err);
+
+    alert(err.message);
   }
 };
 
-onAuthStateChanged(auth,(user)=>{
-  if(user){
-    document.getElementById("auth").style.display="none";
+window.logout = async () => {
+
+  await signOut(auth);
+
+  location.reload();
+};
+
+/* ================= AUTH STATE ================= */
+
+onAuthStateChanged(auth, async (user) => {
+
+  if (user) {
+
+    document.getElementById("auth").style.display =
+      "none";
+
+    try {
+
+      const userRef =
+        firestore.doc(db, "users", user.uid);
+
+      const userSnap =
+        await firestore.getDoc(userRef);
+
+      if (userSnap.exists()) {
+
+        const data =
+          userSnap.data();
+
+        document.getElementById("navAvatar").src =
+          data.avatar;
+
+        document.getElementById("navUsername").innerText =
+          "@" + data.username;
+      }
+
+    } catch(err) {
+
+      console.error(err);
+    }
+
     loadPosts();
+
+    loadStoriesUI();
+
   } else {
-    document.getElementById("auth").style.display="flex";
+
+    document.getElementById("auth").style.display =
+      "flex";
+
+    feed.innerHTML = "";
   }
 });
 
-/* LOGOUT */
-window.logout = ()=>signOut(auth);
-
-/* ================= POST ================= */
+/* ================= CREATE POST ================= */
 
 window.createPost = async () => {
 
-  const text = document.getElementById("postText").value;
-  const file = document.getElementById("image").files[0];
+  try {
 
-  let imageURL = "";
+    if (!auth.currentUser) {
+      alert("Please login first");
+      return;
+    }
 
-  if(file){
-    const r = ref(storage,"posts/"+Date.now());
-    await uploadBytes(r,file);
-    imageURL = await getDownloadURL(r);
+    const text =
+      document.getElementById("postText").value;
+
+    if (!text.trim()) {
+      alert("Write something");
+      return;
+    }
+
+    const userRef =
+      firestore.doc(
+        db,
+        "users",
+        auth.currentUser.uid
+      );
+
+    const userSnap =
+      await firestore.getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      alert("User profile not found");
+      return;
+    }
+
+    const userData =
+      userSnap.data();
+
+    await firestore.addDoc(
+      firestore.collection(db, "posts"),
+      {
+        text,
+        imageURL: "",
+        uid: auth.currentUser.uid,
+        username: userData.username,
+        avatar: userData.avatar,
+        likes: 0,
+        comments: [],
+        createdAt:
+          firestore.serverTimestamp()
+      }
+    );
+
+    document.getElementById("postText").value = "";
+
+  } catch(err) {
+
+    console.error(err);
+
+    alert(err.message);
   }
-
-  await addDoc(collection(db,"posts"),{
-    text,
-    imageURL,
-    likes:0,
-    createdAt:serverTimestamp()
-  });
-
-  document.getElementById("postText").value="";
-  document.getElementById("image").value="";
 };
 
-/* ================= FEED ================= */
+/* ================= LOAD POSTS ================= */
 
-const feed = document.getElementById("feed");
+function loadPosts() {
 
-function loadPosts(){
+  const q = firestore.query(
+    firestore.collection(db, "posts"),
+    firestore.orderBy("createdAt", "desc")
+  );
 
-  const q = query(collection(db,"posts"),orderBy("createdAt","desc"));
+  firestore.onSnapshot(q, (snap) => {
 
-  onSnapshot(q,(snap)=>{
+    feed.innerHTML = "";
 
-    feed.innerHTML="";
-
-    snap.forEach((d)=>{
+    snap.forEach((d) => {
 
       const p = d.data();
 
-      const div = document.createElement("div");
-      div.className="post";
+      const div =
+        document.createElement("div");
 
-      div.innerHTML=`
+      div.className = "post";
+
+      div.innerHTML = `
+
         <div class="postHeader">
-          <img src="https://i.pravatar.cc/100">
-          <b>Circlo User</b>
+
+          <img src="${p.avatar}">
+
+          <div>
+            <b>@${p.username}</b>
+          </div>
+
         </div>
 
-        ${p.imageURL ? `<img class="postImg" src="${p.imageURL}">` : ""}
+        ${
+          p.imageURL
+            ? `<img class="postImg" src="${p.imageURL}">`
+            : ""
+        }
 
-        <div class="postBody">${p.text}</div>
+        <div class="postBody">
+          ${p.text}
+        </div>
 
         <div class="postActions">
-          <button onclick="like('${d.id}',${p.likes})">
-            ❤️ ${p.likes}
+
+          <button onclick="like('${d.id}')">
+            ❤️ ${p.likes || 0}
           </button>
 
-          <button onclick="toggle(this)">💬</button>
+          <button onclick="toggleReply('${d.id}')">
+            💬
+          </button>
+
         </div>
 
-        <div class="commentBox">
-          <input id="c-${d.id}" placeholder="comment">
-          <button onclick="comment('${d.id}')">Send</button>
+        <div
+          class="commentBox"
+          id="replyBox-${d.id}"
+          style="display:none;">
+
+          <input
+            id="c-${d.id}"
+            placeholder="Write comment...">
+
+          <button onclick="comment('${d.id}')">
+            Send
+          </button>
+
+        </div>
+
+        <div class="comments">
+
+          ${(p.comments || []).map((c)=>`
+
+            <div style="
+              padding:10px;
+              border-top:1px solid #eee;
+            ">
+              💬 ${c.text}
+            </div>
+
+          `).join("")}
+
         </div>
       `;
 
       feed.appendChild(div);
     });
-
   });
 }
 
-/* LIKE */
-window.like = async (id,likes)=>{
-  await updateDoc(doc(db,"posts",id),{
-    likes:likes+1
-  });
+/* ================= LIKE ================= */
+
+window.like = async (id) => {
+
+  try {
+
+    await firestore.updateDoc(
+      firestore.doc(db, "posts", id),
+      {
+        likes:
+          firestore.increment(1)
+      }
+    );
+
+  } catch(err) {
+
+    console.log(err);
+  }
 };
 
-/* COMMENT */
-window.comment = async (id)=>{
-  const input=document.getElementById("c-"+id);
-  if(!input.value.trim())return;
-  input.value="";
+/* ================= COMMENT ================= */
+
+window.toggleReply = (id) => {
+
+  const box =
+    document.getElementById(
+      "replyBox-" + id
+    );
+
+  box.style.display =
+    box.style.display === "none"
+      ? "flex"
+      : "none";
+};
+
+window.comment = async (id) => {
+
+  try {
+
+    const input =
+      document.getElementById(
+        "c-" + id
+      );
+
+    if (!input.value.trim()) return;
+
+    await firestore.updateDoc(
+      firestore.doc(db, "posts", id),
+      {
+        comments:
+          firestore.arrayUnion({
+            text: input.value
+          })
+      }
+    );
+
+    input.value = "";
+
+  } catch(err) {
+
+    console.log(err);
+  }
 };
 
 </script>
-
 </body>
 </html>
