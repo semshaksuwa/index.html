@@ -1,0 +1,669 @@
+
+/* =========================
+   ROOT
+========================= */
+
+:root{
+  --primary:#00b7ff;
+  --secondary:#0284c7;
+  --dark:#0f172a;
+  --light:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --shadow:0 10px 35px rgba(0,0,0,0.08);
+  --radius:22px;
+}
+
+/* =========================
+   GLOBAL
+========================= */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:
+    Inter,
+    system-ui,
+    sans-serif;
+}
+
+body{
+  background:
+    linear-gradient(
+      135deg,
+      #f8fbff,
+      #eef6ff
+    );
+  color:#111827;
+  overflow-x:hidden;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.03);
+}
+
+img{
+  object-fit:cover;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+nav{
+  position:sticky;
+  top:0;
+  z-index:999;
+  height:75px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  background:
+    rgba(5, 190, 247, 0.747);
+  backdrop-filter:blur(18px);
+  box-shadow: 5px 2px 3px 1px rgb(122, 128, 128);
+  border-bottom:
+    1px solid rgba(255,255,255,0.3);
+}
+
+.logo{
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:1px;
+  background:
+    linear-gradient(
+      135deg,
+      #fafbfc,
+      #e1e5eb
+    );
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.navActions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.navBtn{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:white;
+  color:#0f172a;
+  font-size:18px;
+  box-shadow:var(--shadow);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.main{
+  width:100%;
+  max-width:750px;
+  margin:auto;
+  padding:20px;
+}
+
+/*======StoryCard===*/
+.storycard{
+  display: flex;
+}
+
+.story{
+  background-color: white;
+  margin: 10px;
+  padding: 10px;
+  width: 150px;
+  height: 200px;
+  border-radius: 20px;
+  border-radius: 10px,10px, 10px, rgba();
+}
+
+
+
+/* =========================
+   CREATE POST
+========================= */
+
+.postCreator{
+  
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  color: black;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+
+.postCreator textarea{
+  width:100%;
+  min-height:110px;
+  color: black;
+  border:none;
+  resize:none;
+  outline:none;
+  font-size:16px;
+  background:transparent;
+
+}
+
+
+
+.postBtn{
+  margin-left:25%;
+  width:40%;
+  padding:10px;
+  border-radius:14px;
+  background:
+    linear-gradient(
+      135deg,
+      #00b7ff,
+      #0077ff
+    );
+  color:white;
+  font-size:15px;
+  font-weight:600;
+}
+
+/* =========================
+   POSTS
+========================= */
+
+.post{
+  background:white;
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+.postHeader{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+}
+
+.postHeader img{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+}
+
+.postHeader h4{
+  font-size:15px;
+}
+
+.postBody{
+  padding:0 16px 16px;
+  line-height:1.7;
+  font-size:15px;
+}
+
+.postActions{
+  display:flex;
+  justify-content:space-around;
+  padding:15px;
+  border-top:1px solid #f1f5f9;
+}
+
+.postActions button{
+  background:none;
+  font-size:15px;
+  color:#334155;
+}
+
+/* =========================
+   PANELS
+========================= */
+
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+
+
+
+.panel{
+
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:340px;
+  height:500px;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  overflow:hidden;
+  z-index:9999;
+  transition:0.25s ease;
+}
+
+
+
+.panelHeader{
+  padding:18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #00b7ff,
+      #0077ff
+    );
+
+  color:white;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.panelHeader h3{
+  font-size:18px;
+}
+
+.panelHeader button{
+  background:none;
+  color:white;
+  font-size:20px;
+}
+
+.panelContent{
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
+  background:#f8fafc;
+}
+
+/* =========================
+   CHAT
+========================= */
+
+.messengerBtn{
+  position:relative;
+}
+
+.messengerBtn i{
+  font-size:22px;
+  color:#050505;
+  transition:0.2s;
+}
+
+.messengerBtn:hover i{
+  transform:scale(1.1);
+}
+
+.msgBadge{
+  position:absolute;
+  top:-4px;
+  right:-4px;
+  background:#ff3040;
+  color:white;
+  font-size:11px;
+  min-width:18px;
+  height:18px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  padding:0 4px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+
+/* =========================
+   TYPING INDICATOR
+========================= */
+
+
+
+/* =========================
+   FRIENDS
+========================= */
+
+.friend{
+  background:white;
+  border-radius:18px;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.friend img{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+}
+
+.friend span{
+  font-size:14px;
+  color:#475569;
+}
+
+/* =========================
+   ONLINE PRESENCE
+========================= */
+
+.presenceRow{
+
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  margin-top:4px;
+
+}
+
+.onlineDot{
+
+  width:10px;
+  height:10px;
+
+  border-radius:50%;
+
+  background:#00ff88;
+
+  box-shadow:
+    0 0 12px
+    rgba(0,255,136,0.8);
+
+  animation:
+    onlinePulse 1.5s infinite;
+
+}
+
+@keyframes onlinePulse{
+
+  0%{
+    transform:scale(1);
+    opacity:1;
+  }
+
+  50%{
+    transform:scale(1.3);
+    opacity:0.6;
+  }
+
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
+
+}
+
+.presenceText{
+
+  font-size:13px;
+  color:#64748b;
+
+}
+/* =========================
+   NOTIFICATIONS
+========================= */
+
+.notify{
+  background:white;
+  border-radius:18px;
+  padding:15px;
+  margin-bottom:12px;
+}
+
+.notify h4{
+  margin-bottom:4px;
+}
+
+/* =========================
+   AUTH
+========================= */
+
+#authScreen{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+
+  background:
+    rgba(255,255,255,0.7);
+
+  backdrop-filter:blur(18px);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.authBox{
+  width:360px;
+  background:white;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:var(--shadow);
+}
+
+.authBox h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.authBox input{
+  width:100%;
+  margin-bottom:12px;
+  padding:15px;
+  border:none;
+  background:#f1f5f9;
+  border-radius:14px;
+  outline:none;
+}
+
+.authBtn{
+  width:100%;
+  padding:15px;
+  border-radius:14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #00b7ff,
+      #0077ff
+    );
+
+  color:white;
+  font-size:15px;
+  font-weight:600;
+}
+
+.switchText{
+  margin-top:14px;
+  text-align:center;
+  color:#64748b;
+  cursor:pointer;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:768px){
+
+  nav{
+    padding:0 12px;
+  }
+
+  .logo{
+    font-size:24px;
+  }
+
+  .navBtn{
+    width:44px;
+    height:44px;
+    font-size:16px;
+  }
+
+  .main{
+    padding:12px;
+  }
+
+  .panel{
+    width:100%;
+    height:100%;
+    top:0;
+    right:0;
+    border-radius:0;
+  }
+
+  .authBox{
+    width:92%;
+  }
+
+}
+
+
+/* =========================
+CHAT PANEL
+========================= */
+
+#chatPanel{
+
+position: fixed;
+
+right: 20px;
+
+bottom: 20px;
+
+width: 340px;
+
+height: 500px;
+
+background: #f2f3f7;
+
+border-radius: 18px;
+
+overflow: hidden;
+
+z-index: 9999;
+
+display: flex;
+
+flex-direction: column;
+
+}
+
+.chatInputArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px;
+  background: #ffffff;
+
+  margin-bottom: 40%;
+
+  border-top: 1px solid #e4e6eb;
+
+  position: sticky;
+  bottom: 20px;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+/* INPUT FIELD */
+.chatInputArea input {
+  flex: 1;
+  height: 40px;
+
+  border: none;
+  outline: none;
+
+  background: #f0f2f5; /* Facebook light input bg */
+  border-radius: 20px;
+
+  padding: 0 14px;
+
+  font-size: 14px;
+  color: #050505;
+
+  transition: 0.2s ease;
+}
+
+.chatInputArea input::placeholder {
+  color: #65676b;
+}
+
+.chatInputArea input:focus {
+  background: #d2d3d6;
+}
+
+/* SEND BUTTON */
+.chatInputArea button {
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  outline: none;
+
+  border-radius: 50%;
+
+  background: #0084ff; /* Messenger blue */
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.chatInputArea button i {
+  font-size: 16px;
+}
+
+/* HOVER EFFECT */
+.chatInputArea button:hover {
+  background: #0073e6;
+  transform: scale(1.05);
+}
+
+/* ACTIVE PRESS */
+.chatInputArea button:active {
+  transform: scale(0.95);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
