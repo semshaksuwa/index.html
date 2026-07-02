@@ -13,6 +13,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 <link rel="stylesheet" href="css/circlo-v2.css">
 
+<link rel="stylesheet" href="css/stories.css">
+
 </head>
 
 <body>
@@ -123,13 +125,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 <div class="main">
 
 <!----storycard-->
-<div class="storycard">
-<div class="story">
-
-  <div class="card">
-
+<div class="storycard" id="storyContainer">
+  <div class="story" onclick="openStoryModal()">
+    <div class="card">
+      <div class="addStoryBtn">
+        <i class="fa-solid fa-plus"></i>
+        <p>Add Story</p>
+      </div>
+    </div>
   </div>
-</div>
 </div>
 
 
@@ -139,7 +143,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
     <textarea
       id="postInput"
-      placeholder="Share Something with Circlo......">
+      placeholder="Share what's on your mind with Circlo">
       
     </textarea>
 
@@ -158,9 +162,58 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
   <div id="feed"></div>
 
 </div>
+
 <!-- =========================
-     CHAT PANEL
+     STORY MODAL
 ========================= -->
+
+<div id="storyModal" class="modal hidden">
+
+  <div class="modalContent">
+
+    <div class="modalHeader">
+      <h3>Create Story</h3>
+      <button onclick="closeStoryModal()">✖</button>
+    </div>
+
+    <div class="modalBody">
+
+      <div class="storyType">
+        <button class="typeBtn active" onclick="switchStoryType('text')">Text Story</button>
+        <button class="typeBtn" onclick="switchStoryType('image')">Image Story</button>
+      </div>
+
+      <!-- Text Story -->
+      <div id="textStoryForm" class="storyForm">
+        <textarea id="storyText" placeholder="Write your story..."></textarea>
+        <button class="submitBtn" onclick="publishTextStory()">Post Story</button>
+      </div>
+
+      <!-- Image Story -->
+      <div id="imageStoryForm" class="storyForm hidden">
+        <input type="file" id="storyImage" accept="image/*" />
+        <div id="imagePreview" class="imagePreview hidden"></div>
+        <button class="submitBtn" onclick="publishImageStory()">Post Story</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- =========================
+     VIEW STORY MODAL
+========================= -->
+
+<div id="viewStoryModal" class="modal hidden">
+
+  <div class="storyViewContent">
+    <button class="closeStoryView" onclick="closeViewStory()">✖</button>
+    <div id="storyDisplay"></div>
+  </div>
+
+</div>
 
 <div id="chatPanel" class="panel hidden">
 
@@ -216,6 +269,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
   </div>
 
+    
+
 </div>
 
 
@@ -240,6 +295,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
   <div id="dmList" class="panelContent"></div>
 
 </div>
+
+
 
 <!-- =========================
      NOTIFICATION PANEL
@@ -291,6 +348,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 </div>
 
+
+
 <!-- =========================
      FRIENDS PANEL
 ========================= -->
@@ -312,6 +371,13 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 </div>
 
 </body>
+
+
+
+
+
+
+
 
 <script type="module">
 
@@ -390,6 +456,222 @@ const feed = document.getElementById("feed");
 let loginMode = true;
 
 window.activeChatUser = null;
+
+/* =========================
+    story AUTH MODE
+========================= */
+
+window.storyType = 'text';
+
+window.openStoryModal = ()=>{
+  document.getElementById('storyModal').classList.remove('hidden');
+};
+
+window.closeStoryModal = ()=>{
+  document.getElementById('storyModal').classList.add('hidden');
+  document.getElementById('storyText').value = '';
+  document.getElementById('storyImage').value = '';
+  document.getElementById('imagePreview').classList.add('hidden');
+};
+
+window.switchStoryType = (type)=>{
+  window.storyType = type;
+  
+  const typeBtns = document.querySelectorAll('.typeBtn');
+  typeBtns.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  if(type === 'text'){
+    document.getElementById('textStoryForm').classList.remove('hidden');
+    document.getElementById('imageStoryForm').classList.add('hidden');
+  }else{
+    document.getElementById('textStoryForm').classList.add('hidden');
+    document.getElementById('imageStoryForm').classList.remove('hidden');
+  }
+};
+
+window.publishTextStory = async()=>{
+  try{
+    const user = auth.currentUser;
+    if(!user){
+      alert('You must be logged in');
+      return;
+    }
+    
+    const text = document.getElementById('storyText').value.trim();
+    if(!text){
+      alert('Write something for your story');
+      return;
+    }
+    
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()){
+      alert('User profile not found');
+      return;
+    }
+    const userData = snap.data();
+    
+    await addDoc(collection(db, 'stories'), {
+      uid: user.uid,
+      username: userData.username,
+      avatar: userData.avatar,
+      content: text,
+      type: 'text',
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+    });
+    
+    alert('Story posted!');
+    window.closeStoryModal();
+    window.loadStories();
+  }catch(err){
+    console.error('Error posting text story:', err);
+    alert('Error: ' + err.message);
+  }
+};
+
+window.publishImageStory = async()=>{
+  try{
+    const user = auth.currentUser;
+    if(!user){
+      alert('You must be logged in');
+      return;
+    }
+    
+    const fileInput = document.getElementById('storyImage');
+    const file = fileInput.files[0];
+    
+    if(!file){
+      alert('Select an image');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onerror = ()=>{
+      alert('Error reading image file');
+    };
+    reader.onload = async(e)=>{
+      try{
+        const imageData = e.target.result;
+        
+        const userRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(userRef);
+        if(!snap.exists()){
+          alert('User profile not found');
+          return;
+        }
+        const userData = snap.data();
+        
+        await addDoc(collection(db, 'stories'), {
+          uid: user.uid,
+          username: userData.username,
+          avatar: userData.avatar,
+          content: imageData,
+          type: 'image',
+          createdAt: Date.now(),
+          expiresAt: Date.now() + (24 * 60 * 60 * 1000)
+        });
+        
+        alert('Story posted!');
+        window.closeStoryModal();
+        window.loadStories();
+      }catch(err){
+        console.error('Error in image story reader:', err);
+        alert('Error: ' + err.message);
+      }
+    };
+    reader.readAsDataURL(file);
+  }catch(err){
+    console.error('Error posting image story:', err);
+    alert('Error: ' + err.message);
+  }
+};
+
+window.loadStories = async()=>{
+  try{
+    const container = document.getElementById('storyContainer');
+    if(!container) return;
+    
+    const snap = await getDocs(collection(db, 'stories'));
+    const stories = [];
+    
+    snap.forEach((doc)=>{
+      const story = doc.data();
+      if(story.expiresAt > Date.now()){
+        stories.push({id: doc.id, ...story});
+      }
+    });
+    
+    stories.sort((a,b) => b.createdAt - a.createdAt);
+    
+    // Keep the add story button
+    container.innerHTML = `<div class="story" onclick="openStoryModal()">
+      <div class="card">
+        <div class="addStoryBtn">
+          <i class="fa-solid fa-plus"></i>
+          <p>Add Story</p>
+        </div>
+      </div>
+    </div>`;
+    
+    stories.slice(0, 5).forEach((story)=>{
+      const storyDiv = document.createElement('div');
+      storyDiv.className = 'story';
+      storyDiv.onclick = ()=>{
+        viewStory(story);
+      };
+      
+      if(story.type === 'text'){
+        storyDiv.innerHTML = `
+          <div class="card storyPreview">
+            <div class="storyPreviewText">${story.content.substring(0, 50)}...</div>
+          </div>
+        `;
+      }else{
+        storyDiv.innerHTML = `
+          <div class="card storyPreview">
+            <img src="${story.content}" style="width:100%;height:100%;object-fit:cover;" />
+          </div>
+        `;
+      }
+      
+      container.appendChild(storyDiv);
+    });
+  }catch(err){
+    console.error('Error loading stories:', err);
+  }
+};
+
+window.viewStory = (story)=>{
+  const display = document.getElementById('storyDisplay');
+  let content = '';
+  
+  if(story.type === 'text'){
+    content = `<p style="font-size:16px;line-height:1.6;">${story.content}</p>`;
+  }else{
+    content = `<img src="${story.content}" style="max-width:100%;border-radius:10px;" />`;
+  }
+  
+  display.innerHTML = `
+    <div class="storyItemHeader">
+      <img src="${story.avatar}" />
+      <div>
+        <h4>@${story.username}</h4>
+        <small>${new Date(story.createdAt).toLocaleString()}</small>
+      </div>
+    </div>
+    <div class="storyItemContent">
+      ${content}
+    </div>
+  `;
+  
+  document.getElementById('viewStoryModal').classList.remove('hidden');
+};
+
+window.closeViewStory = ()=>{
+  document.getElementById('viewStoryModal').classList.add('hidden');
+};
 
 /* =========================
    AUTH MODE
@@ -515,6 +797,8 @@ onAuthStateChanged(auth,(user)=>{
     setOnlinePresence();
 
     loadDMList();
+
+    loadStories();
 
   }else{
 
@@ -917,7 +1201,7 @@ window.sendMessage = async()=>{
 };
 
 /* =========================
-   LOAD PRIVATE CHAT
+   LOAD PRIVATE CHAT/ User A/B
 ========================= */
 
 function loadPrivateChat(){
@@ -976,19 +1260,10 @@ function loadPrivateChat(){
         const div =
         document.createElement("div");
 
-        div.innerHTML = `
+        const isMine = auth.currentUser && msg.uid === auth.currentUser.uid;
 
-          <div class="${
-            msg.uid === auth.currentUser.uid
-            ? "myMessage"
-            : "theirMessage"
-          }">
-
-            ${msg.text}
-
-          </div>
-
-        `;
+        div.className = isMine ? "msg-userB" : "msg-userA";
+        div.textContent = msg.text;
 
         chatMessages.appendChild(div);
 
@@ -1453,6 +1728,104 @@ async function removePresence(){
 
   }
 
+}
+
+const chatMessages = document.getElementById("chatMessages");
+
+let loading = false;
+
+if(chatMessages){
+  chatMessages.addEventListener("scroll", async () => {
+    if (chatMessages.scrollTop <= 50 && !loading) {
+        loading = true;
+
+        // Save current height before adding messages
+        const oldHeight = chatMessages.scrollHeight;
+
+        // Fetch older messages (10 at a time)
+        const messages = await loadOlderMessages(10);
+
+        messages.forEach(msg => {
+            const div = document.createElement("div");
+            div.className = msg.sender === "B" ? "msg-userB" : "msg-userA";
+            div.textContent = msg.text;
+
+            chatMessages.prepend(div);
+        });
+
+        // Maintain scroll position after prepending messages
+        const newHeight = chatMessages.scrollHeight;
+        chatMessages.scrollTop = newHeight - oldHeight;
+
+        loading = false;
+    }
+  });
+}
+
+async function loadOlderMessages(limit = 10) {
+    try {
+        const user = auth.currentUser;
+        if (!user || !window.activeChatUser) return [];
+
+        const chatId = getChatId(user.uid, window.activeChatUser);
+        
+        // Get the timestamp of the first message currently displayed
+        const firstMessageDiv = document.querySelector(".msg-userA, .msg-userB");
+        let oldestTimestamp = Date.now();
+
+        if (firstMessageDiv) {
+            // Get all current messages and find the oldest one
+            const allMessages = document.querySelectorAll(".msg-userA, .msg-userB");
+            if (allMessages.length > 0) {
+                // We'll query for messages older than the current oldest
+                oldestTimestamp = Date.now();
+            }
+        }
+
+        // Query Firestore for older messages
+        const q = query(
+            collection(db, "chats", chatId, "messages"),
+            orderBy("createdAt", "desc"),
+            limit(limit)
+        );
+
+        const snap = await getDocs(q);
+        const olderMessages = [];
+
+        snap.forEach((doc) => {
+            olderMessages.push({
+                uid: doc.data().uid,
+                text: doc.data().text,
+                createdAt: doc.data().createdAt,
+                sender: doc.data().uid === auth.currentUser.uid ? "B" : "A"
+            });
+        });
+
+        return olderMessages.reverse();
+    } catch (err) {
+        console.error("Error loading older messages:", err);
+        return [];
+    }
+}
+
+/* =========================
+   STORY IMAGE PREVIEW
+========================= */
+
+const storyImageInput = document.getElementById('storyImage');
+if(storyImageInput){
+  storyImageInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = (event)=>{
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${event.target.result}" />`;
+        preview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 }
 
 /* =========================
