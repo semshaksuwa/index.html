@@ -143,9 +143,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
     <textarea
       id="postInput"
-      placeholder="Share what's on your mind with Circlo">
-      
-    </textarea>
+      placeholder="Share what's on your mind with Circlo"></textarea>
 
     <button
       class="postBtn"
@@ -237,14 +235,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     <!-- MESSAGES -->
 
     <div id="chatMessages">
+    </div>
 
-      <div id="typingIndicator" class="typingIndicator hidden">
+    </div>
 
-        <div class="typingBubble"></div>
-        <div class="typingBubble"></div>
-        <div class="typingBubble"></div>
+    <div id="typingIndicator" class="typingIndicator hidden">
 
-      </div>
+      <div class="typingBubble"></div>
+      <div class="typingBubble"></div>
+      <div class="typingBubble"></div>
 
     </div>
 
@@ -912,6 +911,78 @@ window.createPost = async()=>{
 };
 
 /* =========================
+   COMMENTS
+========================= */
+
+function renderComments(postId, postElement){
+
+  const commentsList = postElement.querySelector(`.commentList`);
+  if(!commentsList) return;
+
+  onSnapshot(
+    query(
+      collection(db, "posts", postId, "comments"),
+      orderBy("createdAt", "asc")
+    ),
+    (snap)=>{
+      commentsList.innerHTML = "";
+      if(snap.empty){
+        commentsList.innerHTML = "<p class='commentEmpty'>No comments yet. Be the first to reply.</p>";
+        return;
+      }
+
+      const comments = [];
+      snap.forEach((docu)=>{
+        comments.push({ id:docu.id, ...docu.data() });
+      });
+
+      comments.forEach((comment)=>{
+        const item = document.createElement("div");
+        item.className = "commentItem";
+        item.innerHTML = `
+          <div class="commentMeta">
+            <img src="${comment.avatar || `https://i.pravatar.cc/150?u=${comment.uid || "comment"}`}" />
+            <div>
+              <strong>@${comment.username || "user"}</strong>
+              <span>${new Date(comment.createdAt || Date.now()).toLocaleString()}</span>
+            </div>
+          </div>
+          <p>${comment.text}</p>
+        `;
+        commentsList.appendChild(item);
+      });
+    }
+  );
+
+}
+
+window.addComment = async(postId)=>{
+  const user = auth.currentUser;
+  if(!user) return;
+  const input = document.getElementById(`commentInput-${postId}`);
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text){ alert("Write a comment"); return; }
+
+  const userSnap = await getDoc(doc(db,"users",user.uid));
+  const userData = userSnap.data() || {};
+
+  await addDoc(
+    collection(db,"posts",postId,"comments"),
+    {
+      text,
+      uid:user.uid,
+      username:userData.username || user.email?.split("@")[0] || "user",
+      avatar:userData.avatar || `https://i.pravatar.cc/150?u=${user.uid}`,
+      createdAt:Date.now()
+    }
+  );
+
+  input.value = "";
+
+};
+
+/* =========================
    LOAD POSTS
 ========================= */
 
@@ -948,9 +1019,7 @@ function loadPosts(){
 
       posts.forEach((post)=>{
 
-        const div =
-        document.createElement("div");
-
+        const div = document.createElement("div");
         div.className = "post";
 
         div.innerHTML = `
@@ -977,18 +1046,23 @@ function loadPosts(){
 
           <div class="postActions">
 
-            <button
-              onclick="likePost('${post.id}')">
+            <button onclick="likePost('${post.id}')">❤️ ${post.likes || 0}</button>
 
-              ❤️ ${post.likes || 0}
+          </div>
 
-            </button>
-
+          <div class="commentSection">
+            <div class="commentForm">
+              <input type="text" id="commentInput-${post.id}" placeholder="Write a comment..." aria-label="Comment input" />
+              <button type="button" onclick="addComment('${post.id}')" aria-label="Add comment">Comment</button>
+            </div>
+            <div class="commentList"></div>
           </div>
 
         `;
 
         feed.appendChild(div);
+
+        renderComments(post.id, div);
 
       });
 
@@ -1110,6 +1184,16 @@ if(sendBtn){
 
 }
 
+// allow sending on Enter (don't send on Shift+Enter)
+if(chatInput){
+  chatInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
 /* =========================
    SEND MESSAGE
 ========================= */
@@ -1190,7 +1274,10 @@ window.sendMessage = async()=>{
 
     );
 
+    // Clear both references to the input to ensure UI updates
     input.value = "";
+    if(chatInput) chatInput.value = "";
+    try{ if(chatInput) chatInput.focus(); }catch(e){}
 
   }catch(err){
 
@@ -1676,6 +1763,7 @@ async function loadFriends(){
 
 async function setOnlinePresence(){
 
+  
   const user =
   auth.currentUser;
 
@@ -1737,27 +1825,31 @@ let loading = false;
 if(chatMessages){
   chatMessages.addEventListener("scroll", async () => {
     if (chatMessages.scrollTop <= 50 && !loading) {
-        loading = true;
+      loading = true;
 
-        // Save current height before adding messages
-        const oldHeight = chatMessages.scrollHeight;
+      const oldHeight = chatMessages.scrollHeight;
+      const messages = await loadOlderMessages(10);
 
-        // Fetch older messages (10 at a time)
-        const messages = await loadOlderMessages(10);
-
-        messages.forEach(msg => {
-            const div = document.createElement("div");
-            div.className = msg.sender === "B" ? "msg-userB" : "msg-userA";
-            div.textContent = msg.text;
-
-            chatMessages.prepend(div);
-        });
-
-        // Maintain scroll position after prepending messages
-        const newHeight = chatMessages.scrollHeight;
-        chatMessages.scrollTop = newHeight - oldHeight;
-
+      if (!messages.length) {
         loading = false;
+        return;
+      }
+
+      messages.forEach((msg) => {
+        const div = document.createElement("div");
+        div.className = msg.sender === "B" ? "msg-userB" : "msg-userA";
+        div.textContent = msg.text;
+        chatMessages.prepend(div);
+      });
+
+      const newHeight = chatMessages.scrollHeight;
+      if (newHeight > oldHeight) {
+        chatMessages.scrollTop = newHeight - oldHeight + 8;
+      } else {
+        chatMessages.scrollTop = 0;
+      }
+
+      loading = false;
     }
   });
 }

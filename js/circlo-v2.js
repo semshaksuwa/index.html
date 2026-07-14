@@ -26,6 +26,7 @@ import {
   addDoc,
   onSnapshot,
   query,
+  orderBy,
   doc,
   setDoc,
   getDoc,
@@ -75,6 +76,9 @@ const feed =
 document.getElementById("feed");
 
 let loginMode = true;
+let friendsUsersUnsub = null;
+let friendsPresenceUnsub = null;
+let friendsLastCount = 0;
 
 /* =========================
    AUTH MODE
@@ -155,7 +159,9 @@ window.authAction = async()=>{
 
           avatar:
           "https://i.pravatar.cc/150?u=" +
-          cred.user.uid
+          cred.user.uid,
+
+          createdAt:Date.now()
 
         }
 
@@ -283,6 +289,138 @@ window.createPost = async()=>{
 };
 
 /* =========================
+   COMMENTS
+========================= */
+
+function renderComments(postId, postElement){
+
+  const commentsList =
+    postElement.querySelector(
+      `.commentList`
+    );
+
+  if(!commentsList) return;
+
+  onSnapshot(
+
+    query(
+      collection(
+        db,
+        "posts",
+        postId,
+        "comments"
+      ),
+      orderBy("createdAt", "asc")
+    ),
+
+    (snap)=>{
+
+      commentsList.innerHTML = "";
+
+      if(snap.empty){
+
+        commentsList.innerHTML =
+          "<p class='commentEmpty'>No comments yet. Be the first to reply.</p>";
+
+        return;
+
+      }
+
+      const comments = [];
+
+      snap.forEach((docu)=>{
+
+        comments.push({
+          id:docu.id,
+          ...docu.data()
+        });
+
+      });
+
+      comments.forEach((comment)=>{
+
+        const item =
+        document.createElement("div");
+
+        item.className = "commentItem";
+
+        item.innerHTML = `
+
+          <div class="commentMeta">
+
+            <img src="${comment.avatar || `https://i.pravatar.cc/150?u=${comment.uid || "comment"}`}" />
+
+            <div>
+
+              <strong>@${comment.username || "user"}</strong>
+              <span>${new Date(comment.createdAt || Date.now()).toLocaleString()}</span>
+
+            </div>
+
+          </div>
+
+          <p>${comment.text}</p>
+
+        `;
+
+        commentsList.appendChild(item);
+
+      });
+
+    }
+
+  );
+
+}
+
+window.addComment = async(postId)=>{
+
+  const user = auth.currentUser;
+
+  if(!user) return;
+
+  const input =
+    document.getElementById(
+      `commentInput-${postId}`
+    );
+
+  if(!input) return;
+
+  const text = input.value.trim();
+
+  if(!text){
+
+    alert("Write a comment");
+    return;
+
+  }
+
+  const userSnap =
+    await getDoc(
+      doc(db,"users",user.uid)
+    );
+
+  const userData = userSnap.data() || {};
+
+  await addDoc(
+
+    collection(db,"posts",postId,"comments"),
+
+    {
+      text,
+      uid:user.uid,
+      username:userData.username || user.email?.split("@")[0] || "user",
+      avatar:userData.avatar || `https://i.pravatar.cc/150?u=${user.uid}`,
+      createdAt:Date.now()
+    }
+
+  );
+
+  input.value = "";
+
+};
+
+/* =========================
    LOAD POSTS
 ========================= */
 
@@ -357,9 +495,32 @@ function loadPosts(){
 
           </div>
 
+          <div class="commentSection">
+
+            <div class="commentForm">
+
+              <input
+                type="text"
+                id="commentInput-${post.id}"
+                placeholder="Write a comment..."
+                aria-label="Comment input"
+              />
+
+              <button type="button" onclick="addComment('${post.id}')" aria-label="Add comment">
+                Comment
+              </button>
+
+            </div>
+
+            <div class="commentList"></div>
+
+          </div>
+
         `;
 
         feed.appendChild(div);
+
+        renderComments(post.id, div);
 
       });
 
@@ -628,7 +789,86 @@ function loadDMList(){
    FRIENDS
 ========================= */
 
-async function loadFriends(){
+function renderFriendsList(box, users, onlineUsers){
+
+  box.innerHTML = "";
+
+  const sortedUsers =
+  [...users].sort(
+    (a,b)=>(a.createdAt || 0) - (b.createdAt || 0)
+  );
+
+  sortedUsers.forEach((user)=>{
+
+    const isOnline =
+    onlineUsers.includes(
+      user.uid
+    );
+
+    const div =
+    document.createElement("div");
+
+    div.className = "friend";
+
+    div.innerHTML = `
+
+      <img src="${user.avatar}" />
+
+      <div>
+
+        <h4>
+          @${user.username}
+        </h4>
+
+        <div class="presenceRow">
+
+          <div
+            class="onlineDot"
+            style="
+              background:
+              ${isOnline
+                ? '#00ff88'
+                : '#94a3b8'};
+            ">
+          </div>
+
+          <span class="presenceText">
+
+            ${
+              isOnline
+              ? "Active now"
+              : "Offline"
+            }
+
+          </span>
+
+        </div>
+
+      </div>
+
+    `;
+
+    box.appendChild(div);
+
+  });
+
+  if(sortedUsers.length > friendsLastCount){
+
+    requestAnimationFrame(()=>{
+      box.scrollTo({
+        top:box.scrollHeight,
+        behavior:"smooth"
+      });
+    });
+
+  }
+
+  friendsLastCount =
+  sortedUsers.length;
+
+}
+
+function loadFriends(){
 
   const box =
   document.getElementById(
@@ -637,91 +877,65 @@ async function loadFriends(){
 
   if(!box) return;
 
-  const usersSnap =
-  await getDocs(
-    collection(db,"users")
-  );
+  if(friendsUsersUnsub){
+    friendsUsersUnsub();
+  }
 
+  if(friendsPresenceUnsub){
+    friendsPresenceUnsub();
+  }
+
+  friendsLastCount = 0;
+
+  let users = [];
+  let onlineUsers = [];
+
+  friendsUsersUnsub =
   onSnapshot(
+    collection(db,"users"),
+    (usersSnap)=>{
 
-    collection(
-      db,
-      "presence"
-    ),
-
-    (presenceSnap)=>{
-
-      const onlineUsers = [];
-
-      presenceSnap.forEach((docu)=>{
-
-        onlineUsers.push(
-          docu.id
-        );
-
-      });
-
-      box.innerHTML = "";
+      users = [];
 
       usersSnap.forEach((docu)=>{
 
         const user =
         docu.data();
 
-        const isOnline =
-        onlineUsers.includes(
-          user.uid
-        );
-
-        const div =
-        document.createElement("div");
-
-        div.className = "friend";
-
-        div.innerHTML = `
-
-          <img src="${user.avatar}" />
-
-          <div>
-
-            <h4>
-              @${user.username}
-            </h4>
-
-            <div class="presenceRow">
-
-              <div
-                class="onlineDot"
-                style="
-                  background:
-                  ${isOnline
-                    ? '#00ff88'
-                    : '#94a3b8'};
-                ">
-              </div>
-
-              <span class="presenceText">
-
-                ${
-                  isOnline
-                  ? "Active now"
-                  : "Offline"
-                }
-
-              </span>
-
-            </div>
-
-          </div>
-
-        `;
-
-        box.appendChild(div);
+        users.push({
+          ...user,
+          uid:user.uid || docu.id
+        });
 
       });
 
-    }
+      renderFriendsList(
+        box,
+        users,
+        onlineUsers
+      );
 
+    }
+  );
+
+  friendsPresenceUnsub =
+  onSnapshot(
+    collection(db,"presence"),
+    (presenceSnap)=>{
+
+      onlineUsers = [];
+
+      presenceSnap.forEach((docu)=>{
+        onlineUsers.push(docu.id);
+      });
+
+      renderFriendsList(
+        box,
+        users,
+        onlineUsers
+      );
+
+    }
   );
 
 }

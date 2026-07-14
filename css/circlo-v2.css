@@ -223,6 +223,82 @@ nav{
   box-shadow:var(--shadow);
 }
 
+
+/*====commentsection====*/
+.commentSection{
+  padding:0 16px 16px;
+}
+
+.commentForm{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.commentForm input{
+  flex:1;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  outline:none;
+}
+
+.commentForm button{
+  padding:10px 14px;
+  border-radius:999px;
+  background:linear-gradient(135deg, #00b7ff, #0077ff);
+  color:white;
+  font-weight:600;
+}
+
+.commentList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.commentItem{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:10px 12px;
+}
+
+.commentMeta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+.commentMeta img{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+}
+
+.commentMeta strong{
+  display:block;
+  font-size:13px;
+}
+
+.commentMeta span{
+  font-size:11px;
+  color:#64748b;
+}
+
+.commentItem p{
+  font-size:14px;
+  color:#334155;
+  line-height:1.5;
+}
+
+.commentEmpty{
+  font-size:13px;
+  color:#64748b;
+  padding:6px 0;
+}
+
 .postHeader{
   display:flex;
   align-items:center;
@@ -530,7 +606,7 @@ nav{
 .switchText{
   margin-top:14px;
   text-align:center;
-  color:#64748b;
+  color:#ffffff;
   cursor:pointer;
 }
 
@@ -615,6 +691,40 @@ flex-direction: column;
   /*smooth infinite scrolling*/
 scroll-behavior:smooth;
 
+}
+
+/* =========================
+   TYPING INDICATOR
+========================= */
+.typingIndicator{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px;
+  margin-bottom:8px;
+}
+
+.typingBubble{
+  width:8px;
+  height:8px;
+  background:#cbd5e1;
+  border-radius:50%;
+  opacity:0.6;
+  transform:translateY(0);
+  animation:typingBounce 1s infinite ease-in-out;
+}
+
+.typingBubble:nth-child(2){
+  animation-delay:0.15s;
+}
+
+.typingBubble:nth-child(3){
+  animation-delay:0.3s;
+}
+
+@keyframes typingBounce{
+  0%,60%,100%{ transform:translateY(0); opacity:0.6; }
+  30%{ transform:translateY(-6px); opacity:1; }
 }
 
 /*user A messages (left side) and user B messages (right side)*/  
