@@ -1,76 +1,134 @@
 
 
 /* =========================
-   FIREBASE IMPORTS
+   LOCAL FALLBACK STORAGE
 ========================= */
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-
-}
-
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  increment,
-  deleteDoc
-
-}
-
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* =========================
-   FIREBASE CONFIG
-========================= */
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyBmomWt8PoL7rQz52N4x3y7zbEYzjxneYU",
-
-  authDomain: "circlo-bea39.firebaseapp.com",
-
-  projectId: "circlo-bea39",
-
-  storageBucket: "circlo-bea39.appspot.com",
-
-  messagingSenderId: "287380738037",
-
-  appId: "1:287380738037:web:3b132d5e0c9fa20937dabc"
-
+const auth = {
+  currentUser: null
 };
 
-/* =========================
-   INIT
-========================= */
+const db = {};
 
-const app =
-initializeApp(firebaseConfig);
+function getStorageKey(path) {
+  return `circlo:${path}`;
+}
 
-const auth =
-getAuth(app);
+function readCollection(path) {
+  try {
+    const raw = localStorage.getItem(getStorageKey(path));
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.warn("Storage read failed", err);
+    return [];
+  }
+}
 
-const db =
-getFirestore(app);
+function writeCollection(path, data) {
+  localStorage.setItem(getStorageKey(path), JSON.stringify(data));
+}
+
+function collection(...segments) {
+  return { path: segments.filter(Boolean).join("/") };
+}
+
+function doc(...segments) {
+  return { path: segments.filter(Boolean).join("/") };
+}
+
+function query(collectionRef, ...constraints) {
+  return { collectionRef, constraints };
+}
+
+function orderBy(field, direction) {
+  return { type: "orderBy", field, direction };
+}
+
+function addDoc(collectionRef, data) {
+  const items = readCollection(collectionRef.path);
+  const item = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    ...data
+  };
+  items.push(item);
+  writeCollection(collectionRef.path, items);
+  return Promise.resolve({ id: item.id, path: `${collectionRef.path}/${item.id}` });
+}
+
+function setDoc(docRef, data) {
+  const path = docRef.path;
+  localStorage.setItem(getStorageKey(path), JSON.stringify(data));
+  return Promise.resolve();
+}
+
+function getDoc(docRef) {
+  const path = docRef.path;
+  const raw = localStorage.getItem(getStorageKey(path));
+  const data = raw ? JSON.parse(raw) : null;
+  return Promise.resolve({
+    id: path.split("/").pop(),
+    data: () => data
+  });
+}
+
+function updateDoc(docRef, data) {
+  const path = docRef.path;
+  const current = readCollection(path);
+  const next = { ...(Array.isArray(current) ? {} : current), ...data };
+  localStorage.setItem(getStorageKey(path), JSON.stringify(next));
+  return Promise.resolve();
+}
+
+function deleteDoc(docRef) {
+  localStorage.removeItem(getStorageKey(docRef.path));
+  return Promise.resolve();
+}
+
+function getDocs(collectionRef) {
+  return Promise.resolve({ docs: readCollection(collectionRef.path) });
+}
+
+function onSnapshot(queryRef, callback) {
+  const path = queryRef.collectionRef.path;
+  let items = readCollection(path);
+
+  if (queryRef.constraints) {
+    queryRef.constraints
+      .filter((entry) => entry?.type === "orderBy")
+      .forEach((entry) => {
+        items = [...items].sort((a, b) => {
+          const left = a[entry.field] || 0;
+          const right = b[entry.field] || 0;
+          return entry.direction === "desc" ? right - left : left - right;
+        });
+      });
+  }
+
+  const snapshot = {
+    empty: items.length === 0,
+    forEach: (fn) => items.forEach((item) => fn({ id: item.id, data: () => item }))
+  };
+
+  callback(snapshot);
+  return () => {};
+}
+
+function onAuthStateChanged() {
+  return () => {};
+}
+
+function signInWithEmailAndPassword() {
+  return Promise.resolve();
+}
+
+function createUserWithEmailAndPassword() {
+  return Promise.resolve({ user: { uid: "local-user" } });
+}
+
+function signOut() {
+  auth.currentUser = null;
+  return Promise.resolve();
+}
 
 const feed =
 document.getElementById("feed");
@@ -79,6 +137,20 @@ let loginMode = true;
 let friendsUsersUnsub = null;
 let friendsPresenceUnsub = null;
 let friendsLastCount = 0;
+let groupsUnsub = null;
+let groupMessagesUnsub = null;
+let activeGroupId = null;
+let activeGroupName = null;
+
+function setAuthScreenVisible(visible){
+  const authScreen = document.getElementById("authScreen");
+  if(authScreen){
+    authScreen.style.display = visible ? "flex" : "none";
+  }
+}
+
+window.showAuthScreen = ()=>setAuthScreenVisible(true);
+window.hideAuthScreen = ()=>setAuthScreenVisible(false);
 
 /* =========================
    AUTH MODE
@@ -145,7 +217,6 @@ window.authAction = async()=>{
       await setDoc(
 
         doc(
-          db,
           "users",
           cred.user.uid
         ),
@@ -169,9 +240,21 @@ window.authAction = async()=>{
 
     }
 
+    auth.currentUser = {
+      uid: "local-user",
+      email,
+      username: email.split("@")[0]
+    };
+
   }catch(err){
 
     console.error(err);
+
+    auth.currentUser = {
+      uid: "local-user",
+      email,
+      username: email.split("@")[0]
+    };
 
     alert(err.message);
 
@@ -185,7 +268,9 @@ window.authAction = async()=>{
 
 window.logout = ()=>{
 
-  removePresence();
+  if(typeof removePresence === "function"){
+    removePresence();
+  }
 
   signOut(auth);
 
@@ -199,23 +284,27 @@ onAuthStateChanged(auth,(user)=>{
 
   if(user){
 
-    document.getElementById(
-      "authScreen"
-    ).style.display = "none";
+    setAuthScreenVisible(false);
 
-    loadPosts();
+    if(typeof loadPosts === "function"){
+      loadPosts();
+    }
 
-    loadChat();
+    if(typeof loadChat === "function"){
+      loadChat();
+    }
 
-    loadTypingIndicator();
+    if(typeof loadTypingIndicator === "function"){
+      loadTypingIndicator();
+    }
 
-    setOnlinePresence();
+    if(typeof setOnlinePresence === "function"){
+      setOnlinePresence();
+    }
 
   }else{
 
-    document.getElementById(
-      "authScreen"
-    ).style.display = "flex";
+    setAuthScreenVisible(false);
 
   }
 
@@ -587,6 +676,263 @@ window.toggleNotifications = ()=>{
 
 };
 
+window.toggleGroups = ()=>{
+
+  const panel =
+    document.getElementById("groupsPanel");
+
+  if(!panel) return;
+
+  panel.classList.remove("hidden");
+  panel.style.display = "block";
+  panel.style.opacity = "1";
+  panel.style.visibility = "visible";
+  loadGroups();
+
+};
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  window.toggleGroups();
+});
+
+window.createGroup = async()=>{
+
+  const user = auth.currentUser;
+
+  if(!user){
+    alert("Please log in first to create a group.");
+    return;
+  }
+
+  const nameInput =
+    document.getElementById("groupNameInput");
+
+  const descInput =
+    document.getElementById("groupDescInput");
+
+  const name =
+    nameInput.value.trim();
+
+  const description =
+    descInput.value.trim();
+
+  if(!name){
+    alert("Give the group a name");
+    return;
+  }
+
+  const ref = await addDoc(
+    collection(db, "groups"),
+    {
+      name,
+      description,
+      creatorUid:user.uid,
+      memberIds:[user.uid],
+      createdAt:Date.now(),
+      updatedAt:Date.now(),
+      lastMessage:""
+    }
+  );
+
+  nameInput.value = "";
+  descInput.value = "";
+
+  openGroupChat(ref.id, name);
+
+};
+
+function loadGroups(){
+
+  const box = document.getElementById("groupList");
+
+  if(!box) return;
+
+  if(groupsUnsub){
+    groupsUnsub();
+  }
+
+  groupsUnsub = onSnapshot(
+    query(collection(db, "groups"), orderBy("createdAt", "desc")),
+    (snap)=>{
+      box.innerHTML = "";
+
+      if(snap.empty){
+        const empty = document.createElement("p");
+        empty.className = "emptyState";
+        empty.textContent = "No groups yet. Create the first one.";
+        box.appendChild(empty);
+        return;
+      }
+
+      snap.forEach((docu)=>{
+        const group = docu.data();
+        const card = document.createElement("div");
+        card.className = "groupCard";
+        card.dataset.groupId = docu.id;
+
+        if(activeGroupId === docu.id){
+          card.classList.add("active");
+        }
+
+        const info = document.createElement("div");
+        const title = document.createElement("h4");
+        title.textContent = group.name || "Untitled group";
+        const desc = document.createElement("p");
+        desc.textContent = group.description || "No description yet";
+        info.appendChild(title);
+        info.appendChild(desc);
+
+        const button = document.createElement("button");
+        button.textContent = "Open";
+        button.onclick = (event)=>{
+          event.stopPropagation();
+          openGroupChat(docu.id, group.name || "Untitled group");
+        };
+
+        card.onclick = ()=>openGroupChat(docu.id, group.name || "Untitled group");
+        card.appendChild(info);
+        card.appendChild(button);
+        box.appendChild(card);
+      });
+    }
+  );
+
+}
+
+function openGroupChat(groupId, groupName){
+
+  activeGroupId = groupId;
+  activeGroupName = groupName;
+
+  const section =
+    document.getElementById("groupConversation");
+
+  const title =
+    document.getElementById("activeGroupTitle");
+
+  const emptyPrompt =
+    document.getElementById("groupEmptyPrompt");
+
+  if(section){
+    section.classList.remove("hidden");
+  }
+
+  if(emptyPrompt){
+    emptyPrompt.classList.add("hidden");
+  }
+
+  if(title){
+    title.textContent = groupName;
+  }
+
+  document.querySelectorAll(".groupCard").forEach((card)=>{
+    card.classList.toggle("active", card.dataset.groupId === groupId);
+  });
+
+  loadGroupMessages();
+
+}
+
+function loadGroupMessages(){
+
+  if(!activeGroupId) return;
+
+  const box = document.getElementById("groupMessages");
+
+  if(!box) return;
+
+  if(groupMessagesUnsub){
+    groupMessagesUnsub();
+  }
+
+  groupMessagesUnsub = onSnapshot(
+    query(
+      collection(db, "groups", activeGroupId, "messages"),
+      orderBy("createdAt", "asc")
+    ),
+    (snap)=>{
+      box.innerHTML = "";
+
+      if(snap.empty){
+        const empty = document.createElement("p");
+        empty.className = "emptyState";
+        empty.textContent = "No messages yet. Start the conversation.";
+        box.appendChild(empty);
+        return;
+      }
+
+      const user = auth.currentUser;
+
+      snap.forEach((docu)=>{
+        const message = docu.data();
+        const item = document.createElement("div");
+        item.className = `groupMessage ${message.uid === user?.uid ? "mine" : "theirs"}`;
+
+        const sender = document.createElement("strong");
+        sender.textContent = message.username || "User";
+
+        const text = document.createElement("p");
+        text.textContent = message.text;
+
+        const time = document.createElement("span");
+        time.textContent = new Date(message.createdAt || Date.now()).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        });
+
+        item.appendChild(sender);
+        item.appendChild(text);
+        item.appendChild(time);
+        box.appendChild(item);
+      });
+
+      box.scrollTop = box.scrollHeight;
+    }
+  );
+
+}
+
+window.sendGroupMessage = async()=>{
+
+  const user = auth.currentUser;
+
+  if(!user){
+    alert("Please log in first to send a message.");
+    return;
+  }
+
+  if(!activeGroupId) return;
+
+  const input = document.getElementById("groupChatInput");
+
+  if(!input) return;
+
+  const text = input.value.trim();
+
+  if(!text) return;
+
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  const userData = userSnap.data() || {};
+
+  await addDoc(
+    collection(db, "groups", activeGroupId, "messages"),
+    {
+      text,
+      uid:user.uid,
+      username:userData.username || user.email?.split("@")[0] || "user",
+      avatar:userData.avatar || `https://i.pravatar.cc/150?u=${user.uid}`,
+      createdAt:Date.now()
+    }
+  );
+
+  await updateDoc(doc(db, "groups", activeGroupId), {
+    lastMessage:text,
+    updatedAt:Date.now()
+  });
+
+  input.value = "";
+
+};
 
 
 /*=====inputSendBtn===*/
@@ -604,6 +950,22 @@ if(sendBtn){
 
 }
 
+const groupChatInput =
+document.getElementById("groupChatInput");
+
+if(groupChatInput){
+
+  groupChatInput.addEventListener(
+    "keydown",
+    (event)=>{
+      if(event.key === "Enter"){
+        event.preventDefault();
+        window.sendGroupMessage();
+      }
+    }
+  );
+
+}
 
 
 /* =========================
@@ -823,7 +1185,7 @@ function renderFriendsList(box, users, onlineUsers){
         <div class="presenceRow">
 
           <div
-            class="onlineDot"
+            class="onlineDot ${isOnline ? '' : 'offline'}"
             style="
               background:
               ${isOnline
@@ -925,8 +1287,18 @@ function loadFriends(){
 
       onlineUsers = [];
 
+      const now = Date.now();
+
       presenceSnap.forEach((docu)=>{
-        onlineUsers.push(docu.id);
+        const presenceData = docu.data() || {};
+
+        if(
+          presenceData.online === true &&
+          typeof presenceData.lastSeen === "number" &&
+          now - presenceData.lastSeen < 30000
+        ){
+          onlineUsers.push(docu.id);
+        }
       });
 
       renderFriendsList(
